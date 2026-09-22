@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divide y Vencerás | Análisis y Diseño de Algoritmos</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#fff; --ink:#172033; --muted:#64748b;
+  --primary:#2563eb; --primary2:#1d4ed8; --accent:#f59e0b;
+  --green:#16a34a; --red:#dc2626; --border:#dbe3ef;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+header{background:linear-gradient(135deg,#172554,#2563eb);color:#fff;padding:48px 20px;text-align:center}
+header h1{font-size:clamp(2rem,5vw,3.5rem);margin:0 0 10px}
+header p{max-width:900px;margin:8px auto;opacity:.92}
+nav{position:sticky;top:0;z-index:10;background:#0f172a;padding:10px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+nav a{color:#fff;text-decoration:none;padding:8px 13px;border-radius:8px;font-size:.92rem}
+nav a:hover{background:#1e293b}
+main{max-width:1150px;margin:auto;padding:25px 18px 60px}
+section{background:var(--card);margin:22px 0;padding:28px;border:1px solid var(--border);border-radius:18px;box-shadow:0 5px 20px rgba(15,23,42,.05)}
+h2{color:#1d4ed8;margin-top:0}
+h3{color:#334155}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{border:1px solid var(--border);border-radius:14px;padding:18px;background:#fbfdff}
+.step{border-left:5px solid var(--primary);padding:12px 16px;margin:12px 0;background:#f8fbff;border-radius:0 10px 10px 0}
+.badge{display:inline-block;padding:5px 10px;border-radius:999px;background:#dbeafe;color:#1e40af;font-weight:700;font-size:.82rem}
+.note{background:#fff7ed;border-left:5px solid var(--accent);padding:15px;border-radius:8px}
+.success{background:#f0fdf4;border-left:5px solid var(--green);padding:15px;border-radius:8px}
+.warning{background:#fef2f2;border-left:5px solid var(--red);padding:15px;border-radius:8px}
+code,pre{font-family:Consolas,Monaco,monospace}
+pre{background:#0b1220;color:#e5e7eb;padding:18px;border-radius:12px;overflow:auto;font-size:.88rem}
+button{border:0;border-radius:9px;padding:10px 14px;background:var(--primary);color:white;font-weight:700;cursor:pointer}
+button:hover{background:var(--primary2)}
+input{padding:10px;border:1px solid var(--border);border-radius:8px;width:100%;margin:6px 0 10px}
+.array{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0}
+.num{background:#dbeafe;border:1px solid #93c5fd;padding:8px 12px;border-radius:8px;font-weight:700}
+.tree{font-family:Consolas,monospace;background:#f8fafc;padding:15px;border-radius:10px;white-space:pre-wrap}
+details{border:1px solid var(--border);border-radius:10px;margin:10px 0;padding:12px;background:#fff}
+summary{cursor:pointer;font-weight:700}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{border:1px solid var(--border);padding:10px;text-align:left;vertical-align:top}
+th{background:#eff6ff}
+footer{text-align:center;color:var(--muted);padding:30px}
+.small{font-size:.9rem;color:var(--muted)}
+.quiz-result{margin-top:10px;font-weight:700}
+
+.code-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 8px}
+.code-tabs .py-btn{background:#15803d}
+.code-tabs .py-btn:hover{background:#166534}
+.code-panel{margin-bottom:18px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">CT10085 · Análisis y Diseño de Algoritmos · Unidad 2</div>
+  <h1>Divide y Vencerás</h1>
+  <p>Guía interactiva desde cero: concepto, búsqueda binaria, Merge Sort, Quick Sort, trazados y ejercicios implementados en Java.</p>
+  <p><strong>Basado en el material de clase del 23 de septiembre.</strong></p>
+</header>
+
+<nav>
+  <a href="#concepto">Concepto</a>
+  <a href="#binaria">Búsqueda binaria</a>
+  <a href="#merge">Merge Sort</a>
+  <a href="#quick">Quick Sort</a>
+  <a href="#comparacion">Comparación</a>
+  <a href="#ejercicios">Ejercicios</a>
+  <a href="#java">Java</a>
+  <a href="#quiz">Quiz</a>
+</nav>
+
+<main>
+
+<section id="concepto">
+<h2>1. ¿Qué es Divide y Vencerás?</h2>
+<p>Es una estrategia para resolver un problema grande en tres pasos:</p>
+<div class="grid">
+  <div class="card"><h3>1. DIVIDIR</h3><p>Partir el problema en subproblemas más pequeños del mismo tipo.</p></div>
+  <div class="card"><h3>2. CONQUISTAR</h3><p>Resolver cada subproblema. Si todavía es grande, se vuelve a dividir mediante recursión.</p></div>
+  <div class="card"><h3>3. COMBINAR</h3><p>Juntar las soluciones para construir la solución del problema original.</p></div>
+</div>
+<div class="note"><strong>Analogía:</strong> como una mudanza: dividir por habitaciones, empacar cada habitación y finalmente reunir las cajas.</div>
+<h3>La idea clave</h3>
+<p>El problema grande se transforma en problemas pequeños y manejables. Cuando un subproblema llega a un <strong>caso base</strong>, se resuelve directamente.</p>
+<div class="tree">PROBLEMA GRANDE
+├── DIVIDIR
+│   ├── Subproblema A
+│   └── Subproblema B
+├── CONQUISTAR
+│   ├── Resolver A
+│   └── Resolver B
+└── COMBINAR
+    └── Solución completa</div>
+</section>
+
+<section id="binaria">
+<h2>2. Búsqueda binaria</h2>
+<p>Es el ejemplo más sencillo de Divide y Vencerás. Trabaja sobre una lista que ya está <strong>ordenada</strong>.</p>
+<div class="step"><strong>Paso 1:</strong> mirar el elemento del medio.</div>
+<div class="step"><strong>Paso 2:</strong> si es el objetivo, termina.</div>
+<div class="step"><strong>Paso 3:</strong> si el objetivo es menor, continuar solo en la mitad izquierda.</div>
+<div class="step"><strong>Paso 4:</strong> si el objetivo es mayor, continuar solo en la mitad derecha.</div>
+<p>Cada paso descarta aproximadamente la mitad de los elementos. Por eso su complejidad es <strong>O(log n)</strong>.</p>
+
+<h3>Ejemplo de la clase</h3>
+<p>Lista: <code>[2, 5, 8, 12, 16, 23, 38, 45, 56, 72]</code>. Buscamos <strong>23</strong>.</p>
+<ol>
+<li>Medio = 16. Como 23 &gt; 16, descartamos la izquierda.</li>
+<li>Medio de <code>[23,38,45,56,72]</code> = 45. Como 23 &lt; 45, vamos a la izquierda.</li>
+<li>Medio = 23. Encontrado.</li>
+</ol>
+
+<div class="code-tabs">
+  <button onclick="showCode('bin-java')">☕ Implementación Java</button>
+  <button class="py-btn" onclick="showCode('bin-py')">🐍 Implementación Python</button>
+</div>
+<div id="bin-java" class="code-panel">
+<h3>☕ Implementación en Java</h3>
+<pre><code>public class BusquedaBinaria {
+    public static int buscar(int[] arreglo, int objetivo) {
+        int inicio = 0;
+        int fin = arreglo.length - 1;
+
+        while (inicio &lt;= fin) {
+            int medio = (inicio + fin) / 2;
+
+            if (arreglo[medio] == objetivo)
+                return medio;
+            else if (arreglo[medio] &lt; objetivo)
+                inicio = medio + 1;
+            else
+                fin = medio - 1;
+        }
+
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        int[] arreglo = {2, 5, 8, 12, 16, 23, 38, 45, 56, 72};
+        int objetivo = 23;
+
+        int posicion = buscar(arreglo, objetivo);
+        System.out.println("Posición: " + posicion);
+    }
+}</code></pre>
+</div>
+<div id="bin-py" class="code-panel" style="display:none">
+<h3>🐍 Implementación en Python</h3>
+<pre><code>def busqueda_binaria(arreglo, objetivo):
+    inicio = 0
+    fin = len(arreglo) - 1
+
+    while inicio &lt;= fin:
+        medio = (inicio + fin) // 2
+
+        if arreglo[medio] == objetivo:
+            return medio
+        elif arreglo[medio] &lt; objetivo:
+            inicio = medio + 1
+        else:
+            fin = medio - 1
+
+    return -1
+
+
+arreglo = [2, 5, 8, 12, 16, 23, 38, 45, 56, 72]
+objetivo = 23
+
+posicion = busqueda_binaria(arreglo, objetivo)
+print("Posición:", posicion)</code></pre>
+</div>
+
+<div class="card">
+<h3>Prueba interactiva</h3>
+<label>Escribe un número para buscar:</label>
+<input id="target" type="number" value="23">
+<button onclick="binarySearch()">Buscar</button>
+<div id="binaryResult"></div>
+</div>
+
+<h3>Ejercicio 1 — Trazado</h3>
+<p>Con la lista <code>[2, 5, 8, 12, 16, 23, 38, 45, 56, 72]</code>, busca el número <strong>8</strong> y anota en cada paso qué mitad se descarta.</p>
+<details><summary>Ver solución</summary>
+<p>Medio = 16 → 8 es menor → queda <code>[2,5,8,12]</code>.</p>
+<p>Medio = 5 → 8 es mayor → queda <code>[8,12]</code>.</p>
+<p>Medio = 8 → encontrado.</p>
+</details>
+</section>
+
+<section id="merge">
+<h2>3. Merge Sort — ordenar dividiendo</h2>
+<p>Merge Sort aplica claramente los tres pasos de Divide y Vencerás.</p>
+<div class="grid">
+<div class="card"><h3>Dividir</h3><p>Partir el arreglo por la mitad.</p></div>
+<div class="card"><h3>Conquistar</h3><p>Ordenar cada mitad aplicando Merge Sort nuevamente.</p></div>
+<div class="card"><h3>Combinar</h3><p>Mezclar las dos mitades ordenadas comparando sus elementos uno a uno.</p></div>
+</div>
+
+<h3>¿Cómo funciona merge?</h3>
+<p>Si tenemos <code>[3,8]</code> y <code>[1,5]</code>:</p>
+<p>1 vs 3 → sale 1; 3 vs 5 → sale 3; 8 vs 5 → sale 5; queda 8.</p>
+<p>Resultado: <strong>[1,3,5,8]</strong>.</p>
+
+<h3>Trazado de la clase</h3>
+<p>Arreglo: <code>[8, 3, 5, 1, 9, 2]</code></p>
+<div class="tree">[8,3,5,1,9,2]
+├── [8,3,5]
+│   ├── [8]
+│   └── [3,5]
+│       ├── [3]
+│       └── [5]
+└── [1,9,2]
+    ├── [1]
+    └── [9,2]
+        ├── [9]
+        └── [2]
+
+Combinar:
+[3]+[5] → [3,5]
+[9]+[2] → [2,9]
+[8]+[3,5] → [3,5,8]
+[1]+[2,9] → [1,2,9]
+[3,5,8]+[1,2,9] → [1,2,3,5,8,9]</div>
+
+<p><strong>Complejidad:</strong> O(n log n) en mejor, promedio y peor caso. Usa memoria adicional para realizar la mezcla.</p>
+
+<h3>Ejercicio 2 — Trazar Merge Sort</h3>
+<p>Traza paso a paso <code>[6,2,7,4,1,3]</code>, primero dividiendo hasta llegar a elementos individuales y después combinando.</p>
+<details><summary>Ver solución</summary>
+<p>Dividir: <code>[6,2,7]</code> y <code>[4,1,3]</code>.</p>
+<p>Luego: <code>[6]</code>, <code>[2,7]</code> → <code>[2]</code>, <code>[7]</code>; y <code>[4]</code>, <code>[1,3]</code> → <code>[1]</code>, <code>[3]</code>.</p>
+<p>Combinar: <code>[2]+[7]=[2,7]</code>; <code>[1]+[3]=[1,3]</code>.</p>
+<p><code>[6]+[2,7]=[2,6,7]</code>; <code>[4]+[1,3]=[1,3,4]</code>.</p>
+<p>Final: <strong><code>[1,2,3,4,6,7]</code></strong>.</p>
+</details>
+</section>
+
+<section id="quick">
+<h2>4. Quick Sort — ordenar con un pivote</h2>
+<p>Quick Sort también utiliza Divide y Vencerás, pero divide de una manera diferente: selecciona un <strong>pivote</strong> y reorganiza el arreglo alrededor de él.</p>
+<div class="step"><strong>1. Elegir pivote:</strong> en esta clase se usa el último elemento.</div>
+<div class="step"><strong>2. Particionar:</strong> menores a la izquierda y mayores a la derecha.</div>
+<div class="step"><strong>3. Dejar el pivote en su posición final.</strong></div>
+<div class="step"><strong>4. Repetir:</strong> Quick Sort para la parte izquierda y para la derecha.</div>
+<p>A diferencia de Merge Sort, <strong>no hay un merge final</strong>: cuando las partes quedan ordenadas y cada pivote está en su posición, el arreglo queda ordenado.</p>
+
+<h3>Trazado de la clase</h3>
+<p>Arreglo: <code>[8,3,5,1,9,2]</code></p>
+<ol>
+<li>Pivote 2 → <code>[1,2,5,8,9,3]</code>.</li>
+<li>Parte derecha <code>[5,8,9,3]</code>, pivote 3 → <code>[1,2,3,8,9,5]</code>.</li>
+<li>Parte derecha <code>[8,9,5]</code>, pivote 5 → <code>[1,2,3,5,9,8]</code>.</li>
+<li>Parte derecha <code>[9,8]</code>, pivote 8 → <code>[1,2,3,5,8,9]</code>.</li>
+</ol>
+<p><strong>Complejidad:</strong> O(n log n) en promedio y O(n²) en el peor caso cuando la elección del pivote produce particiones muy desbalanceadas.</p>
+
+<h3>Ejercicio 3 — Trazar Quick Sort</h3>
+<p>Usa pivote = último elemento para ordenar <code>[6,2,7,4,1,3]</code>.</p>
+<details><summary>Ver solución</summary>
+<p>Pivote 3 → <code>[2,1,3,4,6,7]</code>.</p>
+<p>Izquierda <code>[2,1]</code>, pivote 1 → <code>[1,2]</code>.</p>
+<p>Derecha <code>[4,6,7]</code>: las particiones con pivote 7 y después 6 no requieren intercambios adicionales.</p>
+<p>Resultado: <strong><code>[1,2,3,4,6,7]</code></strong>.</p>
+</details>
+</section>
+
+<section id="comparacion">
+<h2>5. Merge Sort vs. Quick Sort</h2>
+<table>
+<tr><th>Característica</th><th>Merge Sort</th><th>Quick Sort</th></tr>
+<tr><td>Cómo divide</td><td>Siempre por la mitad exacta.</td><td>Según dónde quede el pivote.</td></tr>
+<tr><td>Combinar</td><td>Sí, mediante merge.</td><td>No existe un merge final.</td></tr>
+<tr><td>Complejidad</td><td>O(n log n) siempre.</td><td>O(n log n) promedio; O(n²) peor caso.</td></tr>
+<tr><td>Memoria</td><td>Usa memoria extra para la mezcla.</td><td>Ordena sobre el mismo arreglo.</td></tr>
+</table>
+<div class="success"><strong>Para recordar:</strong> Merge Sort divide parejo y después combina. Quick Sort divide alrededor de un pivote y no necesita combinar al final.</div>
+</section>
+
+<section id="ejercicios">
+<h2>6. Ejercicios integradores</h2>
+<details open>
+<summary>Ejercicio A — Búsqueda binaria</summary>
+<p><strong>Enunciado:</strong> Implementa una búsqueda binaria para encontrar un número dentro de un arreglo ordenado. Debe retornar la posición si lo encuentra y <code>-1</code> si no existe.</p>
+<p><strong>Prueba:</strong> arreglo <code>[2,5,8,12,16,23,38,45,56,72]</code>; buscar 23 y después 100.</p>
+</details>
+<details>
+<summary>Ejercicio B — Merge Sort</summary>
+<p><strong>Enunciado:</strong> Ordena mediante Merge Sort el arreglo <code>[6,2,7,4,1,3]</code>. Muestra el arreglo antes y después.</p>
+</details>
+<details>
+<summary>Ejercicio C — Quick Sort</summary>
+<p><strong>Enunciado:</strong> Ordena mediante Quick Sort el arreglo <code>[6,2,7,4,1,3]</code>, utilizando siempre el último elemento como pivote.</p>
+</details>
+<details>
+<summary>Ejercicio D — Comparación</summary>
+<p>Explica con tus palabras dos diferencias entre Merge Sort y Quick Sort y menciona la complejidad indicada en clase para cada uno.</p>
+</details>
+</section>
+
+<section id="java">
+<h2>7. Implementación en Java</h2>
+<p>Los siguientes ejemplos pueden ejecutarse en NetBeans, IntelliJ, VS Code o cualquier entorno Java. Para una explicación rápida, cada ejercicio está en una sola clase.</p>
+
+<h3>Java 1 — Búsqueda binaria</h3>
+<pre><code>public class BusquedaBinaria {
+    public static void main(String[] args) {
+        int[] arreglo = {2, 5, 8, 12, 16, 23, 38, 45, 56, 72};
+        int objetivo = 23;
+
+        int inicio = 0;
+        int fin = arreglo.length - 1;
+        int posicion = -1;
+
+        while (inicio &lt;= fin) {
+            int medio = (inicio + fin) / 2;
+
+            if (arreglo[medio] == objetivo) {
+                posicion = medio;
+                break;
+            } else if (arreglo[medio] &lt; objetivo) {
+                inicio = medio + 1;
+            } else {
+                fin = medio - 1;
+            }
+        }
+
+        System.out.println("Posición: " + posicion);
+    }
+}</code></pre>
+<p><strong>Qué deben identificar:</strong> <code>medio</code>, comparación con el objetivo, descarte de una mitad y condición de finalización.</p>
+
+<div class="code-tabs">
+  <button onclick="showCode('merge-java')">☕ Implementación Java</button>
+  <button class="py-btn" onclick="showCode('merge-py')">🐍 Implementación Python</button>
+</div>
+<div id="merge-java" class="code-panel">
+<h3>☕ Implementación en Java — Merge Sort</h3>
+<pre><code>import java.util.Arrays;
+
+public class MergeSort {
+    static void mergeSort(int[] a, int inicio, int fin) {
+        if (inicio &gt;= fin) return;
+
+        int medio = (inicio + fin) / 2;
+
+        mergeSort(a, inicio, medio);
+        mergeSort(a, medio + 1, fin);
+        merge(a, inicio, medio, fin);
+    }
+
+    static void merge(int[] a, int inicio, int medio, int fin) {
+        int[] temp = new int[fin - inicio + 1];
+        int i = inicio, j = medio + 1, k = 0;
+
+        while (i &lt;= medio &amp;&amp; j &lt;= fin) {
+            if (a[i] &lt;= a[j]) temp[k++] = a[i++];
+            else temp[k++] = a[j++];
+        }
+
+        while (i &lt;= medio) temp[k++] = a[i++];
+        while (j &lt;= fin) temp[k++] = a[j++];
+
+        for (int x = 0; x &lt; temp.length; x++)
+            a[inicio + x] = temp[x];
+    }
+
+    public static void main(String[] args) {
+        int[] a = {6, 2, 7, 4, 1, 3};
+
+        System.out.println("Antes: " + Arrays.toString(a));
+        mergeSort(a, 0, a.length - 1);
+        System.out.println("Después: " + Arrays.toString(a));
+    }
+}</code></pre>
+</div>
+<div id="merge-py" class="code-panel" style="display:none">
+<h3>🐍 Implementación en Python — Merge Sort</h3>
+<pre><code>def merge_sort(arreglo):
+    if len(arreglo) &lt;= 1:
+        return arreglo
+
+    medio = len(arreglo) // 2
+    izquierda = merge_sort(arreglo[:medio])
+    derecha = merge_sort(arreglo[medio:])
+
+    resultado = []
+    i = j = 0
+
+    while i &lt; len(izquierda) and j &lt; len(derecha):
+        if izquierda[i] &lt;= derecha[j]:
+            resultado.append(izquierda[i])
+            i += 1
+        else:
+            resultado.append(derecha[j])
+            j += 1
+
+    resultado.extend(izquierda[i:])
+    resultado.extend(derecha[j:])
+    return resultado
+
+
+arreglo = [6, 2, 7, 4, 1, 3]
+print("Antes:", arreglo)
+print("Después:", merge_sort(arreglo))</code></pre>
+</div>
+<p><strong>Qué deben identificar:</strong> caso base, llamadas recursivas, división por el medio y función <code>merge</code>.</p>
+
+<div class="code-tabs">
+  <button onclick="showCode('quick-java')">☕ Implementación Java</button>
+  <button class="py-btn" onclick="showCode('quick-py')">🐍 Implementación Python</button>
+</div>
+<div id="quick-java" class="code-panel">
+<h3>☕ Implementación en Java — Quick Sort</h3>
+<pre><code>import java.util.Arrays;
+
+public class QuickSort {
+    static void quickSort(int[] a, int inicio, int fin) {
+        if (inicio &gt;= fin) return;
+
+        int pivote = particionar(a, inicio, fin);
+
+        quickSort(a, inicio, pivote - 1);
+        quickSort(a, pivote + 1, fin);
+    }
+
+    static int particionar(int[] a, int inicio, int fin) {
+        int pivote = a[fin];
+        int i = inicio - 1;
+
+        for (int j = inicio; j &lt; fin; j++) {
+            if (a[j] &lt; pivote) {
+                i++;
+                int temp = a[i];
+                a[i] = a[j];
+                a[j] = temp;
+            }
+        }
+
+        int temp = a[i + 1];
+        a[i + 1] = a[fin];
+        a[fin] = temp;
+
+        return i + 1;
+    }
+
+    public static void main(String[] args) {
+        int[] a = {6, 2, 7, 4, 1, 3};
+
+        System.out.println("Antes: " + Arrays.toString(a));
+        quickSort(a, 0, a.length - 1);
+        System.out.println("Después: " + Arrays.toString(a));
+    }
+}</code></pre>
+</div>
+<div id="quick-py" class="code-panel" style="display:none">
+<h3>🐍 Implementación en Python — Quick Sort</h3>
+<pre><code>def particionar(arreglo, inicio, fin):
+    pivote = arreglo[fin]
+    i = inicio - 1
+
+    for j in range(inicio, fin):
+        if arreglo[j] &lt; pivote:
+            i += 1
+            arreglo[i], arreglo[j] = arreglo[j], arreglo[i]
+
+    arreglo[i + 1], arreglo[fin] = arreglo[fin], arreglo[i + 1]
+    return i + 1
+
+
+def quick_sort(arreglo, inicio, fin):
+    if inicio &gt;= fin:
+        return
+
+    posicion = particionar(arreglo, inicio, fin)
+    quick_sort(arreglo, inicio, posicion - 1)
+    quick_sort(arreglo, posicion + 1, fin)
+
+
+arreglo = [6, 2, 7, 4, 1, 3]
+print("Antes:", arreglo)
+quick_sort(arreglo, 0, len(arreglo) - 1)
+print("Después:", arreglo)</code></pre>
+</div>
+<p><strong>Qué deben identificar:</strong> pivote, partición, posición final del pivote y dos llamadas recursivas.</p>
+</section>
+
+<section id="quiz">
+<h2>8. Mini Quiz interactivo</h2>
+<div class="card">
+<p><strong>1.</strong> ¿Qué tres pasos forman Divide y Vencerás?</p>
+<button onclick="quiz(1,'a')">A. Buscar, ordenar, imprimir</button>
+<button onclick="quiz(1,'b')">B. Dividir, conquistar, combinar</button>
+<button onclick="quiz(1,'c')">C. Comparar, copiar, eliminar</button>
+<div id="q1" class="quiz-result"></div>
+</div>
+<div class="card">
+<p><strong>2.</strong> ¿Qué necesita la búsqueda binaria?</p>
+<button onclick="quiz(2,'a')">A. Un arreglo ordenado</button>
+<button onclick="quiz(2,'b')">B. Un arreglo vacío</button>
+<button onclick="quiz(2,'c')">C. Un arreglo de texto únicamente</button>
+<div id="q2" class="quiz-result"></div>
+</div>
+<div class="card">
+<p><strong>3.</strong> En el ejemplo de clase, ¿qué usa Quick Sort como pivote?</p>
+<button onclick="quiz(3,'a')">A. El primer elemento</button>
+<button onclick="quiz(3,'b')">B. El elemento del medio</button>
+<button onclick="quiz(3,'c')">C. El último elemento</button>
+<div id="q3" class="quiz-result"></div>
+</div>
+<div class="card">
+<p><strong>4.</strong> ¿Cuál es la complejidad indicada para Merge Sort?</p>
+<button onclick="quiz(4,'a')">A. O(n²) siempre</button>
+<button onclick="quiz(4,'b')">B. O(n log n) siempre</button>
+<button onclick="quiz(4,'c')">C. O(log n) siempre</button>
+<div id="q4" class="quiz-result"></div>
+</div>
+</section>
+
+<section>
+<h2>9. Actividad final</h2>
+<p>Para cerrar el tema, trabaja manualmente con el arreglo:</p>
+<p style="font-size:1.2rem;text-align:center"><strong>[9, 5, 1, 8, 3, 7, 2]</strong></p>
+<ol>
+<li>Traza Merge Sort completo.</li>
+<li>Traza Quick Sort completo usando el último elemento como pivote.</li>
+<li>Escribe el resultado final de ambos.</li>
+<li>Compara cuántos pasos de división/partición realizaste.</li>
+<li>Explica con tus palabras por qué ambos pertenecen a Divide y Vencerás.</li>
+</ol>
+</section>
+
+</main>
+
+<footer>
+  Material interactivo basado en la clase “Divide y Vencerás a Fondo” — CT10085 · Análisis y Diseño de Algoritmos.
+</footer>
+
+<script>
+const datos=[2,5,8,12,16,23,38,45,56,72];
+
+function binarySearch(){
+  const target=Number(document.getElementById("target").value);
+  let inicio=0, fin=datos.length-1, pasos=[];
+  while(inicio<=fin){
+    const medio=Math.floor((inicio+fin)/2);
+    pasos.push(`Medio = ${datos[medio]}`);
+    if(datos[medio]===target){
+      document.getElementById("binaryResult").innerHTML =
+        `<div class="success"><strong>Encontrado:</strong> ${target}<br>
+        Posición: ${medio}<br>${pasos.join(" → ")}</div>`;
+      return;
+    }
+    if(datos[medio]<target) inicio=medio+1;
+    else fin=medio-1;
+  }
+  document.getElementById("binaryResult").innerHTML =
+    `<div class="warning"><strong>No encontrado.</strong><br>${pasos.join(" → ")}</div>`;
+}
+
+function quiz(n,res){
+  const correct={1:"b",2:"a",3:"c",4:"b"};
+  const el=document.getElementById("q"+n);
+  if(res===correct[n]){
+    el.textContent="✓ Correcto";
+    el.style.color="#16a34a";
+  }else{
+    el.textContent="✗ Revisa la explicación de esta sección.";
+    el.style.color="#dc2626";
+  }
+}
+
+function showCode(id){
+  const prefix = id.split('-')[0];
+  document.querySelectorAll('.code-panel').forEach(panel => {
+    if(panel.id.startsWith(prefix + '-')) panel.style.display = 'none';
+  });
+  const selected = document.getElementById(id);
+  if(selected) selected.style.display = 'block';
+}
+</script>
+</body>
+</html>
