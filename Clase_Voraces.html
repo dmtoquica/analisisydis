@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Análisis y Diseño de Algoritmos — Voraces y MST</title>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#fff; --ink:#172033; --muted:#64748b;
+  --primary:#2563eb; --primary2:#1d4ed8; --green:#16a34a;
+  --orange:#ea580c; --red:#dc2626; --line:#dbe3ef;
+  --shadow:0 10px 30px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+header{background:linear-gradient(135deg,#172554,#2563eb);color:white;padding:34px 22px}
+.wrap{max-width:1180px;margin:auto}
+h1{font-size:clamp(28px,4vw,46px);margin:0 0 8px}
+h2{margin-top:0;font-size:30px}
+h3{font-size:21px}
+.subtitle{opacity:.9;font-size:17px;max-width:850px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);padding:7px 12px;border-radius:999px}
+nav{position:sticky;top:0;z-index:10;background:white;border-bottom:1px solid var(--line);box-shadow:0 3px 12px rgba(0,0,0,.05)}
+.navin{display:flex;gap:7px;overflow:auto;padding:9px}
+nav button{white-space:nowrap;border:0;background:#eef3fb;color:#334155;padding:9px 13px;border-radius:9px;cursor:pointer;font-weight:600}
+nav button.active{background:var(--primary);color:#fff}
+main{padding:28px 18px 70px}
+section{display:none}
+section.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin:18px 0;box-shadow:var(--shadow)}
+.callout{padding:16px;border-radius:14px;border-left:5px solid var(--primary);background:#eff6ff;margin:15px 0}
+.warn{background:#fff7ed;border-left-color:var(--orange)}
+.good{background:#f0fdf4;border-left-color:var(--green)}
+.danger{background:#fef2f2;border-left-color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px}
+.mini{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fbfdff}
+.bigword{font-size:40px;font-weight:800;color:var(--primary);line-height:1}
+button.action{border:0;background:var(--primary);color:#fff;padding:10px 15px;border-radius:10px;cursor:pointer;font-weight:700}
+button.action:hover{background:var(--primary2)}
+button.secondary{border:1px solid var(--line);background:white;color:var(--ink);padding:9px 13px;border-radius:10px;cursor:pointer}
+code,pre{font-family:Consolas,Monaco,monospace}
+pre{background:#0f172a;color:#e5e7eb;padding:18px;border-radius:13px;overflow:auto;font-size:14px}
+.code-tabs{display:flex;gap:7px;margin-bottom:8px}
+.code-tabs button{border:1px solid var(--line);background:white;padding:8px 12px;border-radius:8px;cursor:pointer}
+.code-tabs button.sel{background:#172554;color:#fff}
+.codebox{display:none}.codebox.sel{display:block}
+.stepper{display:flex;flex-wrap:wrap;gap:9px;margin:15px 0}
+.step{flex:1 1 150px;border:2px solid var(--line);border-radius:13px;padding:13px;background:white;cursor:pointer}
+.step.selected{border-color:var(--primary);background:#eff6ff}
+.step .n{font-weight:800;color:var(--primary)}
+.output{background:#111827;color:#d1fae5;border-radius:12px;padding:15px;font-family:Consolas,monospace;min-height:60px}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{border:1px solid var(--line);padding:10px;text-align:left}
+th{background:#eff6ff}
+.quiz{border:1px solid var(--line);border-radius:14px;padding:16px;margin:12px 0}
+.quiz button{margin:5px 5px 0 0}
+.feedback{font-weight:700;margin-top:9px}
+.graphbox{background:#f8fafc;border:1px solid var(--line);border-radius:16px;padding:12px}
+svg{width:100%;height:auto;max-height:470px}
+.edge{stroke:#94a3b8;stroke-width:3}
+.edge.chosen{stroke:#16a34a;stroke-width:6}
+.node{fill:#fff;stroke:#2563eb;stroke-width:3}
+.nodeText{font-size:17px;font-weight:800;fill:#172033}
+.edgeText{font-size:15px;font-weight:800;fill:#334155}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;margin-top:8px}
+.dot{display:inline-block;width:13px;height:13px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+.footer{margin-top:40px;color:var(--muted);font-size:13px}
+input,select{padding:10px;border:1px solid var(--line);border-radius:9px;font-size:15px}
+.pill{display:inline-block;padding:5px 9px;border-radius:999px;background:#e0e7ff;color:#3730a3;font-size:13px;font-weight:700}
+ul{padding-left:22px}
+@media(max-width:650px){.card{padding:16px}h2{font-size:25px}}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+  <div class="pill">ANÁLISIS Y DISEÑO DE ALGORITMOS</div>
+  <h1>Estrategias Voraces y Árboles de Expansión Mínima</h1>
+  
+  <div class="badges">
+    
+  </div>
+</div>
+</header>
+
+<nav>
+<div class="wrap navin">
+<button class="active" onclick="show('inicio',this)">Inicio</button>
+<button onclick="show('greedy',this)">1. ¿Qué es Greedy?</button>
+<button onclick="show('actividades',this)">2. Actividades</button>
+<button onclick="show('kruskal',this)">3. Kruskal</button>
+<button onclick="show('uf',this)">4. Union-Find</button>
+<button onclick="show('prim',this)">5. Prim</button>
+<button onclick="show('comparar',this)">6. Comparar</button>
+<button onclick="show('proyecto',this)">7. Proyecto</button>
+<button onclick="show('quiz',this)">8. Quiz</button>
+</div>
+</nav>
+
+<main class="wrap">
+
+<section id="inicio" class="active">
+<div class="card">
+<h2>🌟 ¿Qué vamos a aprender?</h2>
+
+<div class="grid">
+<div class="mini"><div class="bigword">1</div><b>Greedy</b><p>Tomar una decisión que parece la mejor en el momento.</p></div>
+<div class="mini"><div class="bigword">2</div><b>Selección de actividades</b><p>Elegir el máximo número de actividades sin solaparlas.</p></div>
+<div class="mini"><div class="bigword">3</div><b>Kruskal</b><p>Construir un árbol de expansión mínima agregando aristas baratas sin formar ciclos.</p></div>
+<div class="mini"><div class="bigword">4</div><b>Union-Find</b><p>Una estructura para saber rápidamente si dos vértices ya pertenecen al mismo grupo.</p></div>
+<div class="mini"><div class="bigword">5</div><b>Prim</b><p>Construir el mismo tipo de árbol, pero haciéndolo crecer desde un vértice.</p></div>
+</div>
+</div>
+
+<div class="card">
+<h2>🧭 Mapa mental</h2>
+<div class="stepper">
+<div class="step selected"><span class="n">Paso 1</span><br>Entender la decisión local</div>
+<div class="step"><span class="n">Paso 2</span><br>Comprobar si es segura</div>
+<div class="step"><span class="n">Paso 3</span><br>Aplicarla repetidamente</div>
+<div class="step"><span class="n">Paso 4</span><br>Analizar el resultado</div>
+</div>
+<div class="callout">“Voraz significa que en cada paso tomo la mejor opción disponible en ese momento y no vuelvo atrás”.</div>
+</div>
+
+
+</section>
+
+<section id="greedy">
+<div class="card">
+<h2>1. 🟢 ¿Qué es un algoritmo voraz?</h2>
+<p>Un algoritmo voraz construye una solución tomando, en cada paso, la opción que parece mejor <b>en ese momento</b>, sin regresar a cambiar decisiones anteriores.</p>
+<div class="grid">
+<div class="mini"><b>Decisión local</b><p>¿Cuál es la mejor opción que puedo tomar ahora?</p></div>
+<div class="mini"><b>Sin retroceder</b><p>Una vez tomada la decisión, normalmente no se deshace.</p></div>
+<div class="mini"><b>Meta global</b><p>Esperamos que esas decisiones locales construyan una solución óptima.</p></div>
+</div>
+<div class="callout warn"><b>¡Ojo!</b> “Elegir lo más grande/pequeño” no garantiza automáticamente una solución óptima. Hay que justificar que la estrategia funciona para ese problema.</div>
+</div>
+
+<div class="card">
+<h2>🔑 Los 3 conceptos que debes poder explicar</h2>
+<div class="grid">
+<div class="mini"><h3>1. Propiedad de elección voraz</h3><p>Podemos tomar la elección local correcta y todavía llegar a una solución óptima global.</p><p><b>Pregunta:</b> “¿Puedo comprometerme con esta decisión desde ahora?”</p></div>
+<div class="mini"><h3>2. Subestructura óptima</h3><p>Después de tomar una decisión, lo que queda puede resolverse como un subproblema cuya solución óptima ayuda a construir la solución completa.</p><p><b>Pregunta:</b> “¿Lo que queda sigue siendo un problema del mismo tipo?”</p></div>
+<div class="mini"><h3>3. Argumento de intercambio</h3><p>Demostramos que si una solución óptima tomó otra decisión, podemos reemplazarla por la decisión voraz sin empeorar la solución.</p><p><b>Pregunta:</b> “¿Puedo cambiar la primera decisión por la voraz y seguir teniendo una solución óptima?”</p></div>
+</div>
+</div>
+
+<div class="card">
+<h2>🪙 Ejemplo donde Greedy falla</h2>
+<p>Queremos devolver <b>$6</b> usando monedas {1, 3, 4}, buscando el menor número de monedas.</p>
+<div class="grid">
+<div class="mini"><b>Greedy</b><p>4 → queda 2 → 1 → queda 1 → 1</p><p><b>3 monedas:</b> 4+1+1</p></div>
+<div class="mini"><b>Óptimo</b><p>3 → queda 3 → 0</p><p><b>2 monedas:</b> 3+3</p></div>
+</div>
+<div class="callout danger">Conclusión: no podemos decir “Greedy siempre funciona”. Primero debemos estudiar si el problema tiene las propiedades necesarias.</div>
+</div>
+
+<div class="card">
+<h2>🧠 Mini comprobación</h2>
+<div class="quiz">
+<b>Si un algoritmo siempre toma la opción local más barata, ¿eso por sí solo demuestra que encontró la solución óptima?</b><br>
+<button class="secondary" onclick="feedback(this,false,'No. La estrategia debe estar justificada para el problema.')">Sí</button>
+<button class="secondary" onclick="feedback(this,true,'Correcto. Ser voraz no garantiza por sí solo optimalidad.')">No</button>
+<div class="feedback"></div>
+</div>
+</div>
+</section>
+
+<section id="actividades">
+<div class="card">
+<h2>2. 📅 Selección de actividades</h2>
+<p><b>Problema:</b> tenemos actividades con hora de inicio y fin. Queremos escoger el mayor número posible sin que se solapen.</p>
+<table>
+<tr><th>Actividad</th><th>Inicio</th><th>Fin</th></tr>
+<tr><td>A1</td><td>1</td><td>4</td></tr>
+<tr><td>A2</td><td>3</td><td>5</td></tr>
+<tr><td>A3</td><td>0</td><td>6</td></tr>
+<tr><td>A4</td><td>5</td><td>7</td></tr>
+<tr><td>A5</td><td>5</td><td>9</td></tr>
+<tr><td>A6</td><td>8</td><td>9</td></tr>
+</table>
+<div class="callout good"><b>Regla voraz:</b> ordenar por <b>hora de finalización</b> y escoger siempre la siguiente actividad compatible.</div>
+</div>
+
+<div class="card">
+<h2>▶️ Simulación paso a paso</h2>
+<div class="stepper" id="actSteps">
+<div class="step selected" onclick="actStep(0)"><span class="n">1</span><br>Elegir A1</div>
+<div class="step" onclick="actStep(1)"><span class="n">2</span><br>Buscar después de 4</div>
+<div class="step" onclick="actStep(2)"><span class="n">3</span><br>Elegir A4</div>
+<div class="step" onclick="actStep(3)"><span class="n">4</span><br>Elegir A6</div>
+</div>
+<div id="actExplain" class="callout">A1 termina en 4. Ahora solo podemos elegir una actividad cuyo inicio sea ≥ 4.</div>
+<div class="output" id="actOut">Seleccionadas: A1</div>
+</div>
+
+<div class="card">
+<h2>💡 ¿Por qué ordenar por hora de fin?</h2>
+<p>Porque una actividad que termina más temprano deja <b>igual o más espacio</b> para las actividades siguientes.</p>
+<div class="callout"><b>Argumento de intercambio, en lenguaje sencillo:</b> si una solución óptima comenzó con otra actividad que termina más tarde, podemos reemplazarla por la actividad que termina más temprano. No perdemos espacio para las actividades siguientes. Por eso la elección voraz es segura.</div>
+</div>
+
+<div class="card">
+<h2>💻 Implementación</h2>
+<div class="code-tabs">
+<button class="sel" onclick="codeTab('act','py',this)">Python</button>
+<button onclick="codeTab('act','java',this)">Java</button>
+</div>
+<div id="act-py" class="codebox sel"><pre>actividades = [
+    ("A1", 1, 4), ("A2", 3, 5), ("A3", 0, 6),
+    ("A4", 5, 7), ("A5", 5, 9), ("A6", 8, 9)
+]
+
+# 1. Ordenar por hora de FIN
+actividades.sort(key=lambda a: a[2])
+
+seleccionadas = []
+fin_actual = -1
+
+# 2. Elegir la siguiente compatible
+for nombre, inicio, fin in actividades:
+    if inicio >= fin_actual:
+        seleccionadas.append(nombre)
+        fin_actual = fin
+
+print(seleccionadas)
+# ['A1', 'A4', 'A6']</pre></div>
+<div id="act-java" class="codebox"><pre>import java.util.*;
+
+public class Actividades {
+    public static void main(String[] args) {
+        int[][] actividades = {
+            {1,4}, {3,5}, {0,6},
+            {5,7}, {5,9}, {8,9}
+        };
+
+        // Ordenar por hora de FIN
+        Arrays.sort(actividades, Comparator.comparingInt(a -> a[1]));
+
+        int finActual = -1;
+
+        for (int[] a : actividades) {
+            int inicio = a[0];
+            int fin = a[1];
+
+            if (inicio >= finActual) {
+                System.out.println("Elegida: " + inicio + "-" + fin);
+                finActual = fin;
+            }
+        }
+    }
+}</pre></div>
+</section>
+
+<section id="kruskal">
+<div class="card">
+<h2>3. 🌐 Árbol de Expansión Mínima (MST)</h2>
+<p>Un <b>árbol de expansión mínima</b> conecta todos los vértices de un grafo, no tiene ciclos y busca minimizar el peso total de las aristas.</p>
+<div class="callout">🏙️ <b>Ejemplo:</b> conectar varias ciudades con fibra óptica gastando lo menos posible, sin dejar ninguna ciudad desconectada.</div>
+<p>Para <b>n vértices</b>, un árbol tiene exactamente <b>n − 1 aristas</b>.</p>
+</div>
+
+<div class="card">
+<h2>📌 Grafo de la clase</h2>
+<div class="graphbox">
+<svg viewBox="0 0 720 410" id="graphK">
+  <line class="edge" x1="120" y1="100" x2="350" y2="70"/><text class="edgeText" x="220" y="65">4</text>
+  <line class="edge" x1="120" y1="100" x2="250" y2="260"/><text class="edgeText" x="170" y="190">2</text>
+  <line class="edge" x1="350" y1="70" x2="250" y2="260"/><text class="edgeText" x="295" y="160">1</text>
+  <line class="edge" x1="350" y1="70" x2="520" y2="230"/><text class="edgeText" x="445" y="140">5</text>
+  <line class="edge" x1="250" y1="260" x2="520" y2="230"/><text class="edgeText" x="380" y="255">8</text>
+  <line class="edge" x1="250" y1="260" x2="570" y2="350"/><text class="edgeText" x="410" y="335">10</text>
+  <line class="edge" x1="520" y1="230" x2="570" y2="350"/><text class="edgeText" x="565" y="300">2</text>
+  <circle class="node" cx="120" cy="100" r="28"/><text class="nodeText" x="113" y="106">A</text>
+  <circle class="node" cx="350" cy="70" r="28"/><text class="nodeText" x="343" y="76">B</text>
+  <circle class="node" cx="250" cy="260" r="28"/><text class="nodeText" x="243" y="266">C</text>
+  <circle class="node" cx="520" cy="230" r="28"/><text class="nodeText" x="513" y="236">D</text>
+  <circle class="node" cx="570" cy="350" r="28"/><text class="nodeText" x="563" y="356">E</text>
+</svg>
+</div>
+<p><b>Aristas:</b> BC=1, AC=2, DE=2, AB=4, BD=5, CD=8, CE=10.</p>
+<button class="action" onclick="kruskalNext()">▶ Siguiente paso de Kruskal</button>
+<button class="secondary" onclick="kruskalReset()">Reiniciar</button>
+<div class="output" id="kOut">Paso 0: ordenamos las aristas de menor a mayor.</div>
+</div>
+
+<div class="card">
+<h2>🔵 Kruskal en palabras muy simples</h2>
+<ol>
+<li>Ordeno <b>todas</b> las aristas de menor a mayor.</li>
+<li>Tomo la más barata.</li>
+<li>Pregunto: <b>“¿esta arista forma un ciclo?”</b></li>
+<li>Si NO forma ciclo → la agrego.</li>
+<li>Si forma ciclo → la descarto.</li>
+<li>Paro cuando tengo <b>n − 1</b> aristas.</li>
+</ol>
+<div class="callout good"><b>Resultado del ejemplo:</b> BC(1), AC(2), DE(2), BD(5). Peso total = <b>10</b>.</div>
+</div>
+
+<div class="card">
+<h2>💻 Kruskal: código</h2>
+<div class="code-tabs">
+<button class="sel" onclick="codeTab('kr','py',this)">Python</button>
+<button onclick="codeTab('kr','java',this)">Java</button>
+</div>
+<div id="kr-py" class="codebox sel"><pre>aristas = [
+    (1, "B", "C"), (2, "A", "C"), (2, "D", "E"),
+    (4, "A", "B"), (5, "B", "D"), (8, "C", "D"), (10, "C", "E")
+]
+
+aristas.sort()
+
+padre = {v: v for v in "ABCDE"}
+
+def find(x):
+    while padre[x] != x:
+        x = padre[x]
+    return x
+
+def union(a, b):
+    ra, rb = find(a), find(b)
+    if ra != rb:
+        padre[rb] = ra
+        return True
+    return False
+
+mst = []
+for peso, u, v in aristas:
+    if union(u, v):
+        mst.append((u, v, peso))
+
+print(mst)</pre></div>
+<div id="kr-java" class="codebox"><pre>import java.util.*;
+
+public class Kruskal {
+    static int[] padre;
+
+    static int find(int x) {
+        while (padre[x] != x)
+            x = padre[x];
+        return x;
+    }
+
+    static boolean union(int a, int b) {
+        int ra = find(a);
+        int rb = find(b);
+
+        if (ra == rb) return false;
+
+        padre[rb] = ra;
+        return true;
+    }
+
+    public static void main(String[] args) {
+        // {u, v, peso}
+        int[][] aristas = {
+            {1, 2, 1}, {0, 2, 2}, {3, 4, 2},
+            {0, 1, 4}, {1, 3, 5}, {2, 3, 8}, {2, 4, 10}
+        };
+
+        Arrays.sort(aristas, Comparator.comparingInt(a -> a[2]));
+
+        padre = new int[5];
+        for (int i = 0; i < 5; i++) padre[i] = i;
+
+        int total = 0;
+
+        for (int[] e : aristas) {
+            if (union(e[0], e[1])) {
+                System.out.println("Se agrega: " +
+                    e[0] + "-" + e[1] + " peso " + e[2]);
+                total += e[2];
+            }
+        }
+
+        System.out.println("Peso total: " + total);
+    }
+}</pre></div>
+</div>
+</section>
+
+<section id="uf">
+<div class="card">
+<h2>4. 🔗 Conjuntos disjuntos (Union-Find)</h2>
+<p>Esta estructura ayuda a Kruskal a responder una pregunta fundamental:</p>
+<div class="callout"><b>“¿Estos dos vértices ya están conectados dentro del mismo grupo?”</b></div>
+<p>Trabajamos principalmente con dos operaciones:</p>
+<div class="grid">
+<div class="mini"><h3>find(x)</h3><p>Busca la raíz o representante del grupo al que pertenece <b>x</b>.</p></div>
+<div class="mini"><h3>union(x,y)</h3><p>Une los grupos de <b>x</b> y <b>y</b>.</p></div>
+</div>
+</div>
+
+<div class="card">
+<h2>🧩 Simulación de grupos</h2>
+<p>Comenzamos:</p>
+<div id="groups" class="grid"></div>
+<button class="action" onclick="ufNext()">Hacer siguiente UNION</button>
+<button class="secondary" onclick="ufReset()">Reiniciar</button>
+<div class="callout" id="ufText">Cada vértice está solo: {A} {B} {C} {D} {E}</div>
+</div>
+
+<div class="card">
+<h2>🚨 ¿Cómo detectamos un ciclo?</h2>
+<p>Para una arista <b>(u,v)</b>:</p>
+<pre>si find(u) == find(v)
+    → ya están en el mismo grupo
+    → agregar la arista formaría un ciclo
+    → DESCARTAR
+
+si find(u) != find(v)
+    → están en grupos diferentes
+    → podemos unirlos
+    → AGREGAR</pre>
+<div class="callout warn"><b>Esta es la idea:</b> “misma raíz = mismo grupo = ciclo; raíz diferente = grupos diferentes = se puede unir”.</div>
+</div>
+</section>
+
+<section id="prim">
+<div class="card">
+<h2>5. 🌱 Prim</h2>
+<p>Prim busca también un <b>árbol de expansión mínima</b>, pero trabaja de otra manera.</p>
+<div class="grid">
+<div class="mini"><b>Kruskal</b><p>Piensa en <b>todas las aristas</b> ordenadas y va escogiendo las más baratas sin crear ciclos.</p></div>
+<div class="mini"><b>Prim</b><p>Empieza en <b>un vértice</b> y hace crecer el árbol buscando la arista más barata que conecte el árbol con un vértice nuevo.</p></div>
+</div>
+</div>
+
+<div class="card">
+<h2>▶️ Prim desde A, paso a paso</h2>
+<div id="primSteps"></div>
+<button class="action" onclick="primNext()">Siguiente paso</button>
+<button class="secondary" onclick="primReset()">Reiniciar</button>
+<div class="output" id="pOut">Comenzamos con el árbol {A}.</div>
+</div>
+
+<div class="card">
+<h2>💻 Prim: idea en código</h2>
+<div class="code-tabs">
+<button class="sel" onclick="codeTab('pr','py',this)">Python</button>
+<button onclick="codeTab('pr','java',this)">Java</button>
+</div>
+<div id="pr-py" class="codebox sel"><pre>import heapq
+
+# (peso, origen, destino)
+grafo = {
+    "A": [(4,"B"), (2,"C")],
+    "B": [(4,"A"), (1,"C"), (5,"D")],
+    "C": [(2,"A"), (1,"B"), (8,"D"), (10,"E")],
+    "D": [(5,"B"), (8,"C"), (2,"E")],
+    "E": [(10,"C"), (2,"D")]
+}
+
+visitados = {"A"}
+cola = []
+
+for peso, destino in grafo["A"]:
+    heapq.heappush(cola, (peso, "A", destino))
+
+mst = []
+
+while cola and len(visitados) < len(grafo):
+    peso, u, v = heapq.heappop(cola)
+
+    if v in visitados:
+        continue
+
+    visitados.add(v)
+    mst.append((u, v, peso))
+
+    for p, w in grafo[v]:
+        if w not in visitados:
+            heapq.heappush(cola, (p, v, w))
+
+print(mst)</pre></div>
+<div id="pr-java" class="codebox"><pre>// Idea simplificada de Prim:
+// 1. Empiezo con un vértice.
+// 2. Busco la arista más barata que salga del árbol.
+// 3. Agrego el nuevo vértice.
+// 4. Repito hasta incluirlos todos.
+
+boolean[] visitado = new boolean[n];
+visitado[0] = true;
+
+for (int paso = 0; paso < n - 1; paso++) {
+    int mejorPeso = Integer.MAX_VALUE;
+    int u = -1, v = -1;
+
+    for (int i = 0; i < n; i++) {
+        if (!visitado[i]) continue;
+
+        for (int j = 0; j < n; j++) {
+            if (!visitado[j] && grafo[i][j] < mejorPeso) {
+                mejorPeso = grafo[i][j];
+                u = i;
+                v = j;
+            }
+        }
+    }
+
+    visitado[v] = true;
+    System.out.println("Agrego: " + u + " - " + v);
+}</pre></div>
+</div>
+</section>
+
+<section id="comparar">
+<div class="card">
+<h2>⚖️ Kruskal vs. Prim</h2>
+<table>
+<tr><th></th><th>Kruskal</th><th>Prim</th></tr>
+<tr><td>¿Cómo avanza?</td><td>Revisa aristas ordenadas globalmente.</td><td>Hace crecer el árbol desde un punto.</td></tr>
+<tr><td>Pregunta principal</td><td>¿Esta arista crea un ciclo?</td><td>¿Cuál es la arista más barata que conecta con un vértice nuevo?</td></tr>
+<tr><td>Apoyo típico</td><td>Union-Find</td><td>Cola de prioridad / selección de mínimo</td></tr>
+<tr><td>Resultado</td><td colspan="2">Un árbol de expansión mínima.</td></tr>
+</table>
+<div class="callout good"><b>.</b> ambos llegan a un MST de peso total 10, aunque el proceso de construcción es diferente.</div>
+</div>
+
+<div class="card">
+<h2>🧠 Una forma muy fácil de recordarlos</h2>
+<div class="grid">
+<div class="mini"><div class="bigword">K</div><b>Kruskal = Kilómetros</b><p>Piensa en revisar conexiones/aristas y escoger las más baratas, evitando ciclos.</p></div>
+<div class="mini"><div class="bigword">P</div><b>Prim = Punto</b><p>Piensa en comenzar desde un punto y hacer crecer el árbol.</p></div>
+</div>
+</div>
+</section>
+
+<section id="proyecto">
+<div class="card">
+<h2>7. 🚚 Conexión con el proyecto del semestre</h2>
+<p>El proyecto de la tienda de barrio plantea para el Corte 2 una <b>heurística voraz del vecino más cercano</b> y luego una variante con restricción de capacidad.</p>
+<div class="callout">
+<b>La idea:</b> estando en la tienda, escoger el cliente más cercano disponible; después, desde ese cliente, escoger el siguiente más cercano que se pueda atender, y continuar.
+</div>
+</div>
+
+<div class="card">
+<h2>🧭 Ejemplo sencillo</h2>
+<p>Supongamos que la tienda está en <b>(0,0)</b> y tenemos:</p>
+<table>
+<tr><th>Cliente</th><th>X</th><th>Y</th><th>Distancia aproximada</th></tr>
+<tr><td>C1</td><td>2</td><td>1</td><td>2.24</td></tr>
+<tr><td>C2</td><td>5</td><td>1</td><td>5.10</td></tr>
+<tr><td>C3</td><td>1</td><td>2</td><td>2.24</td></tr>
+<tr><td>C4</td><td>6</td><td>5</td><td>7.81</td></tr>
+</table>
+<p>Una estrategia voraz podría comenzar por el cliente más cercano disponible.</p>
+<div class="callout warn"><b>Importante:</b> “voraz” significa que tomamos la mejor decisión local; eso no significa automáticamente que la ruta sea la mejor ruta global posible.</div>
+</div>
+
+<div class="card">
+<h2>💻 Vecino más cercano — versión didáctica</h2>
+<div class="code-tabs">
+<button class="sel" onclick="codeTab('nn','py',this)">Python</button>
+<button onclick="codeTab('nn','java',this)">Java</button>
+</div>
+<div id="nn-py" class="codebox sel"><pre>clientes = {
+    "C1": (2,1),
+    "C2": (5,1),
+    "C3": (1,2),
+    "C4": (6,5)
+}
+
+actual = (0,0)
+pendientes = set(clientes)
+
+while pendientes:
+    # Buscar el cliente más cercano
+    siguiente = min(
+        pendientes,
+        key=lambda c: distancia(actual, clientes[c])
+    )
+
+    print("Voy a:", siguiente)
+    actual = clientes[siguiente]
+    pendientes.remove(siguiente)</pre></div>
+<div id="nn-java" class="codebox"><pre>// Idea didáctica de Vecino Más Cercano
+// actual = tienda o último cliente visitado
+
+while (!pendientes.isEmpty()) {
+
+    String siguiente = null;
+    double menor = Double.MAX_VALUE;
+
+    for (String cliente : pendientes) {
+        double d = distancia(actual, coordenadas.get(cliente));
+
+        if (d < menor) {
+            menor = d;
+            siguiente = cliente;
+        }
+    }
+
+    System.out.println("Voy a: " + siguiente);
+    actual = coordenadas.get(siguiente);
+    pendientes.remove(siguiente);
+}</pre></div>
+</div>
+
+<div class="card">
+<h2>🎯 Pregunta</h2>
+<div class="quiz">
+<b>¿Qué diferencia hay entre “elegir el cliente más cercano ahora” y “encontrar la ruta globalmente más corta”?</b><br>
+<button class="action" onclick="document.getElementById('ans').textContent='La primera es una decisión local voraz. La segunda busca optimizar la ruta completa; no necesariamente coinciden.'">Ver explicación</button>
+<div id="ans" class="callout" style="margin-top:12px">Primero que respondan con sus palabras.</div>
+</div>
+</div>
+</section>
+
+<section id="quiz">
+<div class="card">
+<h2>🧪 Quiz rápido de cierre</h2>
+
+<div class="quiz">
+<b>1. ¿Qué caracteriza a Greedy?</b><br>
+<button class="secondary" onclick="feedback(this,false,'No exactamente.')">Revisar todas las posibilidades.</button>
+<button class="secondary" onclick="feedback(this,true,'Correcto: toma una decisión local y continúa.')">Tomar una decisión local y continuar.</button>
+<button class="secondary" onclick="feedback(this,false,'Eso describe otra estrategia.')">Dividir siempre el problema en dos.</button>
+<div class="feedback"></div>
+</div>
+
+<div class="quiz">
+<b>2. En selección de actividades, ¿por qué ordenamos por hora de fin?</b><br>
+<button class="secondary" onclick="feedback(this,true,'Correcto: terminar antes deja más espacio para actividades futuras.')">Porque deja más espacio para las siguientes.</button>
+<button class="secondary" onclick="feedback(this,false,'El inicio no es la regla voraz de este problema.')">Porque empieza más temprano.</button>
+<div class="feedback"></div>
+</div>
+
+<div class="quiz">
+<b>3. En Kruskal, si find(u) == find(v), ¿qué hacemos?</b><br>
+<button class="secondary" onclick="feedback(this,true,'Correcto: están en el mismo grupo y la arista formaría un ciclo.')">Descartar la arista.</button>
+<button class="secondary" onclick="feedback(this,false,'Sería incorrecto porque formaría un ciclo.')">Agregarla siempre.</button>
+<div class="feedback"></div>
+</div>
+
+<div class="quiz">
+<b>4. ¿Cómo empieza Prim?</b><br>
+<button class="secondary" onclick="feedback(this,true,'Correcto: Prim comienza desde un vértice y hace crecer el árbol.')">Desde un vértice inicial.</button>
+<button class="secondary" onclick="feedback(this,false,'Eso se parece más al enfoque de Kruskal.')">Ordenando todas las aristas y empezando por la más barata.</button>
+<div class="feedback"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>📝 Resumen</h2>
+<pre>GREEDY
+↓
+Mejor decisión local
+↓
+¿La elección es segura?
+↓
+Se demuestra con propiedades / intercambio
+↓
+Aplicaciones:
+    Selección de actividades
+    Vecino más cercano
+
+MST
+↓
+Conectar todos los vértices
+↓
+Sin ciclos
+↓
+Costo total mínimo
+
+KRUSKAL
+↓
+Ordenar aristas
+↓
+¿Mismo grupo?
+    Sí → descartar
+    No → agregar + union()
+
+PRIM
+↓
+Elegir un vértice inicial
+↓
+Buscar la arista más barata hacia un vértice nuevo
+↓
+Repetir</pre>
+</div>
+</section>
+
+</main>
+
+<script>
+function show(id,btn){
+  document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function feedback(btn,ok,msg){
+  const box=btn.parentElement.querySelector('.feedback');
+  box.textContent=(ok?'✅ ':'❌ ')+msg;
+  box.style.color=ok?'#15803d':'#b91c1c';
+}
+function codeTab(prefix,lang,btn){
+  const parent=btn.parentElement.parentElement;
+  parent.querySelectorAll('.codebox').forEach(x=>x.classList.remove('sel'));
+  parent.querySelector('#'+prefix+'-'+lang).classList.add('sel');
+  parent.querySelectorAll('.code-tabs button').forEach(x=>x.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+let aStep=0;
+function actStep(i){
+  aStep=i;
+  document.querySelectorAll('#actSteps .step').forEach((s,j)=>s.classList.toggle('selected',j===i));
+  const texts=[
+    ['A1 termina en 4. Ahora solo podemos elegir una actividad cuyo inicio sea ≥ 4.','Seleccionadas: A1'],
+    ['Después de A1, A2 y A3 ya no sirven. A4 comienza en 5 y termina en 7.','Seleccionadas: A1 → A4'],
+    ['A4 termina en 7. A5 comienza en 5, así que se solapa y se descarta. A6 comienza en 8.','Seleccionadas: A1 → A4'],
+    ['A6 comienza en 8, es compatible. Ya tenemos 3 actividades.','Seleccionadas: A1 → A4 → A6']
+  ];
+  document.getElementById('actExplain').textContent=texts[i][0];
+  document.getElementById('actOut').textContent=texts[i][1];
+}
+const kEdges=[
+  ['BC',1,'Agregamos BC(1): Aún no están conectados B y C.'],
+  ['AC',2,'Agregamos AC(2): A se conecta al grupo de B-C.'],
+  ['DE',2,'Agregamos DE(2): D y E forman otro grupo.'],
+  ['AB',4,'Descartamos AB(4): A y B ya pertenecen al mismo grupo → formaría ciclo.'],
+  ['BD',5,'Agregamos BD(5): une el grupo {A,B,C} con {D,E}.'],
+  ['CD',8,'Descartamos CD(8): C y D ya están en el mismo grupo.'],
+  ['CE',10,'Descartamos CE(10): C y E ya están en el mismo grupo.']
+];
+let kStep=0;
+function kruskalNext(){
+  if(kStep>=kEdges.length){document.getElementById('kOut').textContent='✅ MST completo: BC, AC, DE, BD. Peso total = 10.';return;}
+  const e=kEdges[kStep];
+  document.getElementById('kOut').textContent='Paso '+(kStep+1)+': '+e[0]+' ('+e[1]+'). '+e[2];
+  kStep++;
+}
+function kruskalReset(){kStep=0;document.getElementById('kOut').textContent='Paso 0: ordenamos las aristas de menor a mayor.'}
+
+let groups=[['A'],['B'],['C'],['D'],['E']], ufStep=0;
+const ufOps=[
+  ['B','C'],['A','C'],['D','E'],['B','D']
+];
+function drawGroups(){
+  document.getElementById('groups').innerHTML=groups.map((g,i)=>`<div class="mini"><b>Grupo ${i+1}</b><p>{${g.join(', ')}}</p></div>`).join('');
+}
+function ufNext(){
+  if(ufStep>=ufOps.length){document.getElementById('ufText').textContent='✅ Todos están en un mismo grupo. Kruskal ya tiene las 4 aristas necesarias.';return;}
+  const [a,b]=ufOps[ufStep];
+  let ia=groups.findIndex(g=>g.includes(a)), ib=groups.findIndex(g=>g.includes(b));
+  if(ia!==ib){
+    groups[ia]=groups[ia].concat(groups[ib]);
+    groups.splice(ib,1);
+  }
+  document.getElementById('ufText').textContent=`UNION(${a}, ${b}) → se fusionan los grupos. Ahora: ${groups.map(g=>'{'+g.join(',')+'}').join('  ')}`;
+  ufStep++; drawGroups();
+}
+function ufReset(){groups=[['A'],['B'],['C'],['D'],['E']];ufStep=0;document.getElementById('ufText').textContent='Cada vértice está solo: {A} {B} {C} {D} {E}';drawGroups()}
+drawGroups();
+
+let pStep=0;
+const pOps=[
+  'Árbol = {A}. Disponibles: AB(4), AC(2). Elegimos AC(2).',
+  'Árbol = {A,C}. La más barata que conecta con un nuevo vértice es CB(1).',
+  'Árbol = {A,C,B}. Elegimos BD(5).',
+  'Árbol = {A,C,B,D}. Elegimos DE(2).',
+  '✅ Árbol completo: AC, CB, BD, DE. Peso total = 10.'
+];
+function primNext(){
+  if(pStep>=pOps.length-1){document.getElementById('pOut').textContent=pOps[pOps.length-1];return;}
+  document.getElementById('pOut').textContent=pOps[pStep];
+  pStep++;
+}
+function primReset(){pStep=0;document.getElementById('pOut').textContent='Comenzamos con el árbol {A}.'}
+</script>
+</body>
+</html>
